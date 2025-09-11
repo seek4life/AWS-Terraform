@@ -1,0 +1,117 @@
+# VPC Configuration Example
+# Copy this file to terraform.tfvars and customize as needed
+
+# Basic VPC Configuration
+vpc_name = "my-production-vpc"
+vpc_cidr = "10.0.0.0/16"  # Can be customized to any /16 block
+availability_zones_count = 3
+
+# Subnet CIDR Blocks - Customize these based on your network design
+# Each subnet gets a /19 block (8,192 IPs) by default
+public_subnets = [
+  "10.0.0.0/19",   # AZ-1: 10.0.0.0 - 10.0.31.255
+  "10.0.32.0/19",  # AZ-2: 10.0.32.0 - 10.0.63.255
+  "10.0.64.0/19"   # AZ-3: 10.0.64.0 - 10.0.95.255
+]
+
+private_subnets = [
+  "10.0.96.0/19",   # AZ-1: 10.0.96.0 - 10.0.127.255
+  "10.0.128.0/19",  # AZ-2: 10.0.128.0 - 10.0.159.255
+  "10.0.160.0/19"   # AZ-3: 10.0.160.0 - 10.0.191.255
+]
+
+database_subnets = [
+  "10.0.192.0/19",  # AZ-1: 10.0.192.0 - 10.0.223.255
+  "10.0.224.0/19",  # AZ-2: 10.0.224.0 - 10.0.255.255
+  "10.1.0.0/19"     # AZ-3: 10.1.0.0 - 10.1.31.255
+]
+
+# Network Configuration
+enable_nat_gateway = true
+enable_vpn_gateway = false
+single_nat_gateway = false      # Set to true for cost savings (less HA)
+one_nat_gateway_per_az = true   # Set to false if single_nat_gateway is true
+
+# DNS Configuration
+enable_dns_hostnames = true
+enable_dns_support = true
+
+# Database Subnet Configuration
+create_database_subnet_group = true
+create_database_subnet_route_table = true
+
+# VPC Flow Logs Configuration
+enable_vpc_flow_logs = true
+create_flow_log_cloudwatch_iam_role = true
+create_flow_log_cloudwatch_log_group = true
+
+# Common Tags - Applied to all resources
+common_tags = {
+  Environment   = "production"
+  Project       = "my-project"
+  Region        = "eu-central-1"
+  ManagedBy     = "terraform"
+  Owner         = "platform-team"
+  CostCenter    = "engineering"
+  Application   = "web-app"
+}
+
+# Subnet-specific Tags
+public_subnet_tags = {
+  Type = "public"
+  "kubernetes.io/role/elb" = "1"  # For AWS Load Balancer Controller
+  Tier = "web"
+}
+
+private_subnet_tags = {
+  Type = "private"
+  "kubernetes.io/role/internal-elb" = "1"  # For internal load balancers
+  Tier = "application"
+}
+
+database_subnet_tags = {
+  Type = "database"
+  Tier = "data"
+}
+
+# Route Table Tags
+public_route_table_tags = {
+  Type = "public-rt"
+  Purpose = "public-internet-access"
+}
+
+private_route_table_tags = {
+  Type = "private-rt"
+  Purpose = "private-outbound-via-nat"
+}
+
+database_route_table_tags = {
+  Type = "database-rt"
+  Purpose = "database-isolated"
+}
+
+# Gateway Tags
+nat_gateway_tags = {
+  Type = "nat-gateway"
+  Purpose = "private-subnet-internet-access"
+}
+
+igw_tags = {
+  Type = "internet-gateway"
+  Purpose = "public-internet-access"
+}
+
+# AWS Region
+aws_region = "eu-central-1"
+
+# Alternative CIDR examples for different environments:
+# Development: vpc_cidr = "10.1.0.0/16"
+# Staging:     vpc_cidr = "10.2.0.0/16"  
+# Production:  vpc_cidr = "10.0.0.0/16"
+
+# For smaller environments, you can use fewer AZs:
+# availability_zones_count = 2
+
+# Cost optimization example (single NAT gateway):
+# single_nat_gateway = true
+# one_nat_gateway_per_az = false
